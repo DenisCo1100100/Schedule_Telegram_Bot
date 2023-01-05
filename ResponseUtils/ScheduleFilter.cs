@@ -1,25 +1,88 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using ScheduleTelegramBot.Extensions;
+using System.Text.RegularExpressions;
 
 namespace ScheduleTelegramBot.ResponseUtils
 {
     public class ScheduleFilter
     {
         private const string XPATH_TO_TABLE = "//body/section/div[@class='container']/table/tbody";
-        private IWebDriver _driver;
-        private List<string> _allSemester = new List<string>();
+        private const string XPATH_TO_WEEKS_DROPDOWN_BUTTON = "//body/section/div/div/div[@class='col-xs-3']/div/button";
+        private const string XPATH_TO_WEEKS_DROPDOWN_CONTENT = "//body/section/div/div/div[@class='col-xs-3']/div/ul";
+        private const string EXPRESSION_WEEK_NUMBERS = @"\s(?<week>\d+)\s\(((?<firstTime>\d{2}.\d{2})[.]?)-((?<secondTime>\d{2}.\d{2})[.]?)\)";
+
+        private Dictionary<List<DateTime>, int> _weeksNumbers = new();
+
+        IWebDriver _driver;
 
         public ScheduleFilter(PSUWebSiteConnection connection)
         {
             string pathToFile = AppDomain.CurrentDomain.BaseDirectory + '\\';
             _driver = new ChromeDriver(pathToFile);
             _driver.Navigate().GoToUrl(connection.Url);
-            Thread.Sleep(3000);
+            Thread.Sleep(1000);
+
+            FillWeeksDictinary();
+        }
+
+        public List<string> GetNextWeekSchudle()
+        {
+            int weekNumber = GetCurrentWeekNumber() + 1;
+            return GetSchudleByWeekNumber(weekNumber);
+        }
+
+        private void FillWeeksDictinary()
+        {
+            IWebElement dropDownButton = _driver.FindElement(By.XPath(XPATH_TO_WEEKS_DROPDOWN_BUTTON));
+            dropDownButton.Click();
+
+            IWebElement element = _driver.FindElement(By.XPath(XPATH_TO_WEEKS_DROPDOWN_CONTENT));
+            foreach (var item in element.FindElements(By.TagName("li")))
+            {
+                Match match = Regex.Match(item.Text, EXPRESSION_WEEK_NUMBERS);
+                if (match.Success)
+                {
+                    List<DateTime> weekDates = new();
+                    int weekNumber = Convert.ToInt32(match.Groups["week"].Value);
+                    string firstDateStr = match.Groups["firstTime"].Value;
+                    DateTime firstDate = DateTime.Parse(firstDateStr);
+                    weekDates.Add(firstDate);
+                    string secondDateStr = match.Groups["secondTime"].Value;
+                    DateTime secondDate = DateTime.Parse(secondDateStr);
+                    weekDates.Add(secondDate);
+                    _weeksNumbers.Add(weekDates, weekNumber);
+                }
+            }
+            dropDownButton.Click();
+        }
+
+        private List<string> GetSchudleByWeekNumber(int weekNumber)
+        {
+            List<string> schudle = new();
+            _driver.FindElement(By.XPath(XPATH_TO_WEEKS_DROPDOWN_BUTTON)).Click();
+            _driver.FindElement(By.XPath($"//body/section/div/div/div[@class='col-xs-3']/div/ul/li/a[@href=\"#w{weekNumber - 1}\"]")).Click();
+
             IWebElement element = _driver.FindElement(By.XPath(XPATH_TO_TABLE));
             foreach (var row in element.FindElements(By.TagName("tr")))
             {
-                _allSemester.Add(row.Text);
+                if (row.Text != String.Empty)
+                    schudle.Add(row.Text);
             }
+
+            return schudle;
+        }
+
+        private int GetCurrentWeekNumber()
+        {
+            DateTime currentDate = DateTime.Now.Date;
+            foreach (var week in _weeksNumbers)
+            {
+                if (currentDate.IsInRange(week.Key[0], week.Key[1]))
+                    return week.Value;
+            }
+
+            return -1;
         }
     }
 }
