@@ -26,6 +26,12 @@ namespace ScheduleTelegramBot.ResponseUtils
             FillWeeksDictinary();
         }
 
+        public List<string> GetThisWeekSchudle()
+        {
+            int weekNumber = GetCurrentWeekNumber();
+            return GetSchudleByWeekNumber(weekNumber);
+        }
+
         public List<string> GetNextWeekSchudle()
         {
             int weekNumber = GetCurrentWeekNumber() + 1;
