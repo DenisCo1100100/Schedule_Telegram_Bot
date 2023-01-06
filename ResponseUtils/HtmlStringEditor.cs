@@ -46,15 +46,15 @@ namespace ScheduleTelegramBot.ResponseUtils
                                                     .Replace("<ForHall>", match.Groups["hall"].Value)
                                                     .Replace("<ForTeacher>", match.Groups["teacher"].Value)
                                                     .Replace("<ForGroup>", match.Groups["group"].Value);
-                    tableSize += 45;
+                    tableSize += 46;
                 }
                 else
                 {
                     resultContent += _htmlWeekNamePattern.Replace("<ForWeekName>", row.Split(" ")[0]);
-                    tableSize += 27;
+                    tableSize += 28;
                 }
             }
-            tableSize += 27;
+            tableSize += 28;
             return _htmlTablePattern.Replace("<ForContent>", resultContent);
         }
 

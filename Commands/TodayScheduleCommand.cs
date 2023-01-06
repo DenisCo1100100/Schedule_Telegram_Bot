@@ -1,6 +1,8 @@
 ﻿using ScheduleTelegramBot.Core;
+using ScheduleTelegramBot.ResponseUtils;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.InputFiles;
 
 namespace ScheduleTelegramBot.Commands
 {
@@ -10,10 +12,21 @@ namespace ScheduleTelegramBot.Commands
 
         public async void Execute(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            Message sentMessage = await botClient.SendTextMessageAsync(
+            var connection = new PSUWebSiteConnection(update.Message.Chat.Id);
+            var scheduleFilter = new ScheduleFilter(connection);
+            List<string> schudleList = scheduleFilter.GetTodaySchedule();
+            int tableSize = 0;
+            string htmlTable = HtmlStringEditor.ListToHtmlTable(schudleList, ref tableSize);
+            string outputFilePath = "Result.jpeg";
+            HtmlStringEditor.HtmlToJpeg(htmlTable, tableSize, outputFilePath);
+
+            using (FileStream stream = new(outputFilePath, FileMode.Open))
+            {
+                Message sentMessage = await botClient.SendPhotoAsync(
                 chatId: update.Message.Chat.Id,
-                text: $"{update.Message.Chat.FirstName}, this function is not working now!",
+                photo: new InputOnlineFile(stream, outputFilePath),
                 cancellationToken: cancellationToken);
+            }
         }
     }
 }

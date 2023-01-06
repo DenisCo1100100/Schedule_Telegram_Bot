@@ -7,7 +7,6 @@ namespace ScheduleTelegramBot
     {
         static void Main(string[] args)
         {
-            new HtmlStringEditor();
             new Bot();
             Console.ReadKey();
         }
