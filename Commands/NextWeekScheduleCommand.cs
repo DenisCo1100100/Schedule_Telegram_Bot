@@ -15,9 +15,10 @@ namespace ScheduleTelegramBot.Commands
             var connection = new PSUWebSiteConnection(update.Message.Chat.Id);
             var scheduleFilter = new ScheduleFilter(connection);
             List<string> schudleList = scheduleFilter.GetNextWeekSchudle();
-            string htmlTable = HtmlStringEditor.ListToHtmlTable(schudleList);
+            int tableSize = 0;
+            string htmlTable = HtmlStringEditor.ListToHtmlTable(schudleList, ref tableSize);
             string outputFilePath = "Result.jpeg";
-            HtmlStringEditor.HtmlToJpeg(htmlTable, outputFilePath);
+            HtmlStringEditor.HtmlToJpeg(htmlTable, tableSize, outputFilePath);
 
             using (FileStream stream = new(outputFilePath, FileMode.Open))
             {
