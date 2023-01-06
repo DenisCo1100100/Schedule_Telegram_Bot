@@ -1,6 +1,7 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using ScheduleTelegramBot.Extensions;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace ScheduleTelegramBot.ResponseUtils
@@ -26,16 +27,28 @@ namespace ScheduleTelegramBot.ResponseUtils
             FillWeeksDictinary();
         }
 
-        public List<string> GetThisWeekSchudle()
-        {
-            int weekNumber = GetCurrentWeekNumber();
-            return GetSchudleByWeekNumber(weekNumber);
-        }
+        public List<string> GetThisWeekSchudle() => GetSchudleByWeekNumber(GetCurrentWeekNumber());
 
-        public List<string> GetNextWeekSchudle()
+        public List<string> GetNextWeekSchudle() => GetSchudleByWeekNumber(GetCurrentWeekNumber() + 1);
+
+        public List<string> GetTodaySchedule()
         {
-            int weekNumber = GetCurrentWeekNumber() + 1;
-            return GetSchudleByWeekNumber(weekNumber);
+            string today = DateTime.Now.ToString("dddd", new CultureInfo("ru-RU"));
+            string tomorow = DateTime.Now.AddDays(1).ToString("dddd", new CultureInfo("ru-RU"));
+            List<string> schedule = GetSchudleByWeekNumber(GetCurrentWeekNumber());
+            List<string> todaySchedule = new();
+            bool isToday = false;
+            foreach (string day in schedule)
+            {
+                if (day.Split(" ")[0].ToLower().Equals(today.ToLower()))
+                    isToday = true;
+                else if (day.Split(" ")[0].ToLower().Equals(tomorow.ToLower()))
+                    return todaySchedule;
+
+                if (isToday)
+                    todaySchedule.Add(day);
+            }
+            return todaySchedule;
         }
 
         private void FillWeeksDictinary()
