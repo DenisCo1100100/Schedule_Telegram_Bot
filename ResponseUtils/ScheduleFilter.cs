@@ -31,18 +31,22 @@ namespace ScheduleTelegramBot.ResponseUtils
 
         public List<string> GetNextWeekSchudle() => GetSchudleByWeekNumber(GetCurrentWeekNumber() + 1);
 
-        public List<string> GetTodaySchedule()
+        public List<string> GetTodaySchedule() => GetScheduleByDayOfWeek(DateTime.Now);
+
+        public List<string> GetTomorrowSchedule() => GetScheduleByDayOfWeek(DateTime.Now.AddDays(1));
+
+        private List<string> GetScheduleByDayOfWeek(DateTime dayOfWeek)
         {
-            string today = DateTime.Now.ToString("dddd", new CultureInfo("ru-RU"));
-            string tomorow = DateTime.Now.AddDays(1).ToString("dddd", new CultureInfo("ru-RU"));
+            string curentDayOfWeek = dayOfWeek.ToString("dddd", new CultureInfo("ru-RU"));
+            string nextDayOfWeek = dayOfWeek.AddDays(1).ToString("dddd", new CultureInfo("ru-RU"));
             List<string> schedule = GetSchudleByWeekNumber(GetCurrentWeekNumber());
             List<string> todaySchedule = new();
             bool isToday = false;
             foreach (string day in schedule)
             {
-                if (day.Split(" ")[0].ToLower().Equals(today.ToLower()))
+                if (day.Split(" ")[0].ToLower().Equals(curentDayOfWeek.ToLower()))
                     isToday = true;
-                else if (day.Split(" ")[0].ToLower().Equals(tomorow.ToLower()))
+                else if (day.Split(" ")[0].ToLower().Equals(nextDayOfWeek.ToLower()))
                     return todaySchedule;
 
                 if (isToday)
